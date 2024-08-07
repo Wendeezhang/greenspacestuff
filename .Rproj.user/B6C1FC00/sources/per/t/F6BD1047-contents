@@ -1,0 +1,48 @@
+# Load required libraries
+library(sf)
+library(dplyr)
+library(foreach)
+library(iterators)
+library(doParallel)
+library(parallel)
+buffered <- st_read("D:/chesbuffer300.shp")
+
+# Read points file
+points <- st_read("D:/chestrees.shp")
+
+# Ensure CRS (Coordinate Reference System) match
+points <- st_transform(points, st_crs(buffered))
+
+# Create a unique identifier for each buffered area
+buffered$id <- 1:nrow(buffered)
+
+# Initialize parallel processing
+cl <- makeCluster(detectCores())
+registerDoParallel(cl)
+
+# Perform calculations in parallel
+results_list <- foreach(i = 1:nrow(buffered), .combine = rbind) %dopar% {
+  # Select the buffered area
+  buffered_area <- buffered[i, ]
+  
+  # Spatial join to identify which points intersect with the buffered area
+  points_in_buffered <- st_intersection(points, buffered_area)
+  
+  # Calculate the total area of intersecting points
+  total_area <- sum(st_area(points_in_buffered))
+  
+  # Calculate the percentage of tree's area to 300m buffer zone
+  percentage <- total_area / st_area(buffered_area) * 100
+  
+  # Return the result for this buffered area
+  c("Buffered_ID" = buffered_area$id, "Total_Area" = total_area, "Percentage" = percentage)
+}
+
+# Stop parallel processing
+stopCluster(cl)
+
+# Combine results into a data frame
+results_df <- as.data.frame(results_list)
+
+# Write the result to a CSV file
+write.csv(results_df, "tree_density_results_parallel.csv", row.names = FALSE)
