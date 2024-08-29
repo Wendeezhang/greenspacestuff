@@ -1,0 +1,37 @@
+Methodology for travel time to closest green space at Unique property reference number level
+Green space
+1.	Travel time from the residential household to the nearest green space:
+There are many definitions of greenspace in use, green space definition in this method follows the Natural England Green Infrastructure Framework. The definition 
+is as follows:
+“Greenspace is an area of vegetation that is set within a landscape or townscape. Greenspace can include blue space (i.e. lakes, rivers and wetlands), and may include built environment features.
+Greenspace is not necessarily accessible to the public e.g. greenspaces include allotments (that are usually locked and only accessible to key holders), and golf courses (which may require club membership and or payment of a fee to access). Such greenspace has a significant role to play in the overall provision of greenspaces for recreation and enjoyment.”
+
+This green space measure includes the following categories:
+•	public park or garden
+•	playing field
+•	golf course
+•	allotments or community growing space
+•	cemetery.
+•	play space 
+•	Bowling green
+•	Allotments or community growing spaces
+•	Religious ground (only include areas with significant green areas) 
+Excluded:
+tennis court and other sports facilities
+2. For categorising green space, pre-processing involves calculating the area of each green space polygon and define the type based on the size; the reference for the type is originated from Natural England’s green infrastructure framework. Regarding the actual size of green space polygons in our study area, we divide the green space into 5 groups: Doorstep, local natural green space, neighbourhood green space, wide neighbourhood green space and larger green space. Among these, the doorstep green space, local natural and neighbourhood are within 15 minutes target, as noted in the Figure.
+Doorstep green space: 200m, 0.5ha, less than 5 minutes walking
+Local natural green space: 300m, 2ha, 5 minutes walking
+Neighbourhood natural green space: Less than 1km, 10ha, 15 minutes walking
+Wider neighbourhood natural green space: 2km, 20ha, 35 minutes walking
+District natural green space: 5km, 100ha, 15-20 minutes cycling
+Sub-regional green space: 10km, 500ha, 30-40 minutes cycling
+In the calcualtion, we merged the last two category into larger green space.
+
+3. Methods details: 
+Step 1: Find the nearest access points using nngeo (k-Nearest Neighbour) for each UPRN (Unique Property Reference Number) in the above category, and reshape the data file into long format. The attribute was first applied to the green space polygon, then attached to access points to each green space, the result of this step would be five separate wide format csv, to increase the coverage of closet access points, we choose 3 candidate points for each UPRN.
+Step 2: Reproject the step 1 result from wide format to long format, to do this, first remove the uprn coordinates from the step 1 result, attach each access point coordinates, combine the result in one wide csv and then reshape into one long format CSV, completed in R. This is the data preparation step for the realistic routing analysis, using package tidyr and dplyr.
+Step 3: Calculate the walking time to these their nearest access points in 5 groups using Rapid Realistic Routing with R5 in R and choose the minimum walking travel tine from each set developed in step 1. The R5 use Open Street Map networks for routing analysis and have transport mode, including driving, public transport, walking and cycling. 
+In this case, we set the starting point as residential UPRN; find the matched UPRN in the destination record, destinations are the closest green space access point, walking mode, open street map in Liverpool, max walking distance 5km, and time 1 hour (that’s the larger green space standard used as the max here).  Choose the minimum walking time for each UPRN in each group.
+Step 4:Then, spatially join the information from the UPRN and green space layer to the UPRN, ID and postcode, lsoa , tidy up the results; now we got the travel time to the nearest green space for each uprn: on 5 different groups
+
+
